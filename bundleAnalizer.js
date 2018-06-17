@@ -1,9 +1,8 @@
 (function () {
     const CONSTANTS = {
-        REGEX_FOR_SERCH_TOKENS: /([^:]+\/\*\![^*]+\*\/)/gi,
-        REGEX_FOR_SERCH_KEYS_IN_BUNDLE: /('|")\b((\b[a-zA-Z]+)(\.[a-zA-Z]+)+)\b('|")/g,
+        REGEX_FOR_SEARCH_TOKENS: /([^:]+\/\*\![^*]+\*\/)/gi,
         REGEX_FOR_SPLIT_TOKEN_AND_VALUE: /[;]?[\/][*][!]/,
-        REGEX_FOR_REMOVE_END_COMENT: /[*/]+$/g,
+        REGEX_FOR_REMOVE_END_COMMENT: /[*/]+$/g,
         REGEX_FOR_FIND_INCORRECT_BASE64_IMAGES: /image\//,
         REGEX_FOR_CLEANING_KEY: /[^\w-_\s]|^\w+/gi,
         PATH_TO_RESULT_FOLDER: './result'
@@ -11,7 +10,8 @@
 
     let bundle = require('./resources/bundle.js');
     let configuration = require('./resources/configuration.js');
-    let fs = require('fs');
+    let utils = require('./utils.js');
+
 
     let tokenCleaner = {
 
@@ -43,37 +43,22 @@
             const objectsForSaving = [];
             const pathToBundleTokens = `${CONSTANTS.PATH_TO_RESULT_FOLDER}/${self.configuration.serviceName}-${new Date().getTime()}`;
 
-            objectsForSaving.push({key: `${self.configuration.serviceName}-self.json`, value: self});
-            objectsForSaving.push({key: `${self.configuration.serviceName}-configuration.json`, value: self.configuration});
-            objectsForSaving.push({key: `${self.configuration.serviceName}-tokensInBundle.json`, value: self.tokensInBundle});
-            objectsForSaving.push({key: `${self.configuration.serviceName}-notEqualsTokens.json`, value: self.notEqualsTokens});
-            objectsForSaving.push({key: `common.json`, value: self.common});
+            objectsForSaving.push({key: `${self.configuration.serviceName}-self.json`, value: JSON.stringify(self)});
+            objectsForSaving.push({key: `${self.configuration.serviceName}-configuration.json`, value: JSON.stringify(self.configuration)});
+            objectsForSaving.push({key: `${self.configuration.serviceName}-tokensInBundle.json`, value: JSON.stringify(self.tokensInBundle)});
+            objectsForSaving.push({key: `${self.configuration.serviceName}-notEqualsTokens.json`, value: JSON.stringify(self.notEqualsTokens)});
+            objectsForSaving.push({key: `common.json`, value: JSON.stringify(self.common)});
 
-            if (!fs.existsSync(pathToBundleTokens)) {
-                fs.mkdirSync(pathToBundleTokens);
-            }
-
-            objectsForSaving.forEach(element => {
-               self.saveJson(`${pathToBundleTokens}/${element.key}`, element.value)
-            });
+            utils.printResult(pathToBundleTokens, objectsForSaving);
         },
 
-        saveJson: function (path, content) {
 
-            fs.writeFile(path, JSON.stringify(content), (error) => {
-                if (error) {
-                    return console.log(error);
-                }
-
-                console.log(`${path} was created!`);
-            })
-        },
 
         makeDefaultValueArray: function (tokensInBundle) {
             let self = this;
             let tokensObjectInBundle = [];
-            tokensInBundle.forEach(tokenWithDefaluValue => {
-                let tokenInArray = tokenWithDefaluValue.replace(CONSTANTS.REGEX_FOR_REMOVE_END_COMENT, '').split(CONSTANTS.REGEX_FOR_SPLIT_TOKEN_AND_VALUE);
+            tokensInBundle && tokensInBundle.forEach(tokenWithDefaultValue => {
+                let tokenInArray = tokenWithDefaultValue.replace(CONSTANTS.REGEX_FOR_REMOVE_END_COMMENT, '').split(CONSTANTS.REGEX_FOR_SPLIT_TOKEN_AND_VALUE);
                 tokensObjectInBundle.push({
                     key: self.clearKey(tokenInArray[1]),
                     value: CONSTANTS.REGEX_FOR_FIND_INCORRECT_BASE64_IMAGES.test(tokenInArray[0]) ? "url('data:" + tokenInArray[0] : tokenInArray[0]
@@ -102,7 +87,7 @@
         },
 
         findTokensInBundle: function (bandle) {
-            return bandle.match(CONSTANTS.REGEX_FOR_SERCH_TOKENS);
+            return bandle.match(CONSTANTS.REGEX_FOR_SEARCH_TOKENS);
         },
 
         getUniqueValues: function (tokenValues) {
