@@ -1,14 +1,5 @@
 (function () {
-    const CONSTANTS = {
-        REGEX_FOR_SEARCH_LOCALIZATION_KEYS: /('|")\b((\b[a-zA-Z]+)((\.[a-zA-Z-]+)?)+)\b('|")/g,
-        REGEX_FOR_FINDING_XML_TAGS: /<trans-unit[\s\S]*?<\/trans-unit>/g,
-        REGEX_FOR_SEARCH_LOCALIZATION_KEYS_IN_CONFIG: /id=('|")\b((\b[a-zA-Z]+)((\.[a-zA-Z-]+)?)+)\b('|")/g,
-        REGEX_FOR_CLEANING_MAP: /'|"|\\|id=/g,
-        PATH_TO_RESULT_FOLDER: './result',
-        SEARCH_ORIGINAL_PARAM: /original="([\w.]+)/g,
-        SEARCH_SOURCE_LANGUAGE_PARAM: /source-language="([\w.]+)/g,
-        SEARCH_TARGET_LANGUAGE_PARAM: /target-language="([\w.-]+)/g,
-    };
+    const CONSTANTS = require('./constants.js');
 
     let bundle = require('./resources/bundle.js');
     let localizationConfig = require('./resources/localization.xml.js');
@@ -24,12 +15,18 @@
         findLocalizationKeys: function () {
             let self = this;
             let localizationKeysInBundle = bundle.match(CONSTANTS.REGEX_FOR_SEARCH_LOCALIZATION_KEYS)
-                .map(element => element.replace(CONSTANTS.REGEX_FOR_CLEANING_MAP, ''));
+                ? bundle.match(CONSTANTS.REGEX_FOR_SEARCH_LOCALIZATION_KEYS)
+                    .map(element => element.replace(CONSTANTS.REGEX_FOR_CLEANING_MAP, ''))
+                : null;
+
             let uniqueKeys = self.getUniqueKeys(localizationKeysInBundle);
 
-            self.originalParam = localizationConfig.match(CONSTANTS.SEARCH_ORIGINAL_PARAM)[0].replace('original="', '');
-            self.sourceLanguage = localizationConfig.match(CONSTANTS.SEARCH_SOURCE_LANGUAGE_PARAM)[0].replace('source-language="', '');
-            self.targetLanguageParam = localizationConfig.match(CONSTANTS.SEARCH_TARGET_LANGUAGE_PARAM)[0].replace('target-language="', '');
+            self.originalParam = localizationConfig && localizationConfig
+                .match(CONSTANTS.SEARCH_ORIGINAL_PARAM)[0].replace('original="', '');
+            self.sourceLanguage = localizationConfig && localizationConfig
+                .match(CONSTANTS.SEARCH_SOURCE_LANGUAGE_PARAM)[0].replace('source-language="', '');
+            self.targetLanguageParam = localizationConfig && localizationConfig
+                .match(CONSTANTS.SEARCH_TARGET_LANGUAGE_PARAM)[0].replace('target-language="', '');
 
             let localizationConfigKeys = localizationConfig.match(CONSTANTS.REGEX_FOR_FINDING_XML_TAGS);
             let coincidenceInConfig = self.getCoincidence(uniqueKeys, localizationConfigKeys);
@@ -70,7 +67,7 @@
             function getKeysMap(keysInBundle) {
                 let keysMap = [];
 
-                keysInBundle.forEach(element => {
+                keysInBundle && keysInBundle.forEach(element => {
                     keysMap[`-${element}`] = element});
                 return getUniqueValues(keysMap);
             }

@@ -1,13 +1,5 @@
 (function () {
-    const CONSTANTS = {
-        REGEX_FOR_SEARCH_TOKENS: /([^:]+\/\*\![^*]+\*\/)/gi,
-        REGEX_FOR_SPLIT_TOKEN_AND_VALUE: /[;]?[\/][*][!]/,
-        REGEX_FOR_REMOVE_END_COMMENT: /[*/]+$/g,
-        REGEX_FOR_FIND_INCORRECT_BASE64_IMAGES: /image\//,
-        REGEX_FOR_CLEANING_KEY: /[^\w-_\s]|^\w+/gi,
-        PATH_TO_RESULT_FOLDER: './result'
-    };
-
+    const CONSTANTS = require('./constants.js');
     let bundle = require('./resources/bundle.js');
     let configuration = require('./resources/configuration.js');
     let utils = require('./utils.js');
